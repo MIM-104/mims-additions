@@ -14,7 +14,7 @@ A torture addon for **Nomifactory CEu**. More complicated crafting, harsher prog
 
 [First release and source download](https://github.com/MIM-104/mims-additions/releases/latest)
 
-Requires **Minecraft 1.12.2** and the complete **Nomi-CEu 1.7.5** modpack.
+Requires **Minecraft 1.12.2** and the **Nomi-CEu 1.7.5** modpack.
 
 **Status:** Alpha  
 **Author:** MIM-104
