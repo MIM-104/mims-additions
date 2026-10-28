@@ -1,5 +1,7 @@
 # MIM’s Additions
 
+## [Download the First Release (.JAR)](https://github.com/MIM-104/mims-additions/releases/latest/download/modid-1.0.0.jar)
+
 A torture addon for **Nomifactory CEu**. More complicated crafting, harsher progression, and a factory that becomes increasingly difficult to keep running.
 
 ## Features
@@ -12,7 +14,11 @@ A torture addon for **Nomifactory CEu**. More complicated crafting, harsher prog
 
 ## Download
 
-The ready-to-play **JAR** will be available under **Releases**, with source offered separately.
+[**Download the mod (.JAR)**](https://github.com/MIM-104/mims-additions/releases/latest/download/modid-1.0.0.jar)
+
+[First release and optional source download](https://github.com/MIM-104/mims-additions/releases/latest)
+
+The mod JAR is also available directly in this repository as **MIMs-Additions-1.0.0.jar**.
 
 Requires **Minecraft 1.12.2** and the complete **Nomi-CEu 1.7.5** modpack.
 
