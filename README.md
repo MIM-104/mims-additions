@@ -12,11 +12,7 @@ A torture addon for **Nomifactory CEu**. More complicated crafting, harsher prog
 - **New machinery:** Supreme singleblocks, custom microminers, and additional multiblocks
 - **Materials and recipes:** Epsteinium, Inconel 600, and more demanding endgame crafting
 
-## Download
-
-[**Download the mod (.JAR)**](https://github.com/MIM-104/mims-additions/releases/latest/download/modid-1.0.0.jar)
-
-[First release and optional source download](https://github.com/MIM-104/mims-additions/releases/latest)
+[First release and source download](https://github.com/MIM-104/mims-additions/releases/latest)
 
 The mod JAR is also available directly in this repository as **MIMs-Additions-1.0.0.jar**.
 
