@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.example.modid.mixins",
+	"compatibilityLevel": "JAVA_8",
+	"refmap": "mixins.modid.refmap.json",
+	"mixins": [
+		"MixinTileReactorCore",
+		"MixinProcessExplosion",
+		"MixinFluidPipeHandler",
+		"MixinFluidPipeMeltdown"
+	],
+	"client": [],
+	"server": []
+}

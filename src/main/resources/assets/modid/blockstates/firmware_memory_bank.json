@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "modid:firmware_memory_bank"
+    }
+  }
+}

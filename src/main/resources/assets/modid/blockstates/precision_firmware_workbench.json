@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "modid:precision_firmware_workbench",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "modid:precision_firmware_workbench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "modid:precision_firmware_workbench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "modid:precision_firmware_workbench",
+      "y": 270
+    }
+  }
+}

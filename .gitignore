@@ -1,0 +1,47 @@
+# Build outputs and downloaded dependencies
+/.gradle/
+/build/
+/lib/
+/bin/
+/out/
+/eclipse/
+*.class
+
+# Local Minecraft instances, worlds and logs
+/run/
+/logs/
+/crash-reports/
+/screenshots/
+/instance.cfg
+/mmc-pack.json
+/modlist.html
+/CHANGELOG.md
+/PROGRESSION_AUDIT.md
+*.log
+
+# Editors
+/.idea/
+/.vscode/
+/.settings/
+/.metadata/
+/.classpath
+/.project
+*.launch
+*.ipr
+*.iws
+*.iml
+
+# Local credentials and temporary files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.tmp
+*.bak
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

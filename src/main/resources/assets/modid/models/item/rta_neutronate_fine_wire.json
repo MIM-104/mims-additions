@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "modid:item/rta_neutronate_fine_wire",
+    "layer1": "modid:item/rta_neutronate_fine_wire_overlay"
+  }
+}

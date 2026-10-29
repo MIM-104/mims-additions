@@ -1,0 +1,26 @@
+{
+  "package": "com.example.modid.mixins",
+  "required": true,
+  "refmap": "mixins.modid.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinFirmwareCrafting",
+    "MixinFirmwareOreCrafting",
+    "MixinInstantTnt",
+    "MixinBloodMoonPeacefulMobs",
+    "MixinBloodMoonPlayerDamage",
+    "MixinUhvSingleblockTooltip",
+    "MixinSupremeMachineTooltip"
+  ],
+  "client": [
+    "MixinAnimationSpriteClock",
+    "MixinItemRenderer",
+    "MixinRenderItem"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

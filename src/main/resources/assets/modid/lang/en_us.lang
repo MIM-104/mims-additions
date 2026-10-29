@@ -1,0 +1,103 @@
+# -----------------------------
+# Creative tab
+# -----------------------------
+itemGroup.modid.mims_additions=MIM's Additions
+
+
+# -----------------------------
+# Items
+# -----------------------------
+item.modid.stabilized_epsteinium.name=Stabilized Epsteinium
+item.modid.baby_villager_essence.name=Baby Villager Essence
+item.modid.epsteinium_infused_wetware_mainframe.name=Epsteinium-Infused Wetware Mainframe
+item.modid.rta_neutronate_fine_wire.name=Ruthenium Trinium Americium Neutronate Fine Wire
+
+
+# -----------------------------
+# Fluids
+# -----------------------------
+fluid.epsteinium=Epsteinium
+fluid.epsteinium.name=Epsteinium
+fluid.liquidbabyvillager=Liquid Baby Villager
+fluid.liquidbabyvillager.name=Liquid Baby Villager
+fluid.molten_infinity=Molten Infinity
+fluid.molten_infinity.name=Molten Infinity
+death.attack.hot_fluid=%1$s tried to swim in %2$s
+item.modid.titaniumcoilmicrominer.name=Titanium Plated Coil Micro Miner
+item.modid.omnium_plate.name=Omnium Plate
+item.modid.microminermicrominer.name=§dDuranium-Trinium-Omnium Plated Microminer Microminer
+
+
+# -----------------------------
+# Microverse Projector IV controller (THIS is the important one)
+# -----------------------------
+modid.machine.microverse_projector_4.name=Microverse Projector IV
+modid.machine.microverse_projector_4.tooltip=§8A goldly device engineered to breach and escape the microverse, enabling traversal across the multiverse to track, harvest, and secure rare materials from unstable and hostile realities.
+
+
+# -----------------------------
+# Recipe map display name (JEI category title)
+# -----------------------------
+recipemap.microverse_4.name=Mission (MK IV)
+
+
+# -----------------------------
+# Supreme machines
+# -----------------------------
+modid.machine.supreme_electric_furnace.name=Supreme Electric Furnace
+modid.machine.supreme_macerator.name=Supreme Macerator
+modid.machine.supreme_alloy_smelter.name=Supreme Alloy Smelter
+modid.machine.supreme_arc_furnace.name=Supreme Arc Furnace
+modid.machine.supreme_assembler.name=Supreme Assembler
+modid.machine.supreme_circuit_assembler.name=Supreme Circuit Assembler
+modid.machine.supreme_autoclave.name=Supreme Autoclave
+modid.machine.supreme_bender.name=Supreme Bender
+modid.machine.supreme_brewery.name=Supreme Brewery
+modid.machine.supreme_canner.name=Supreme Canner
+modid.machine.supreme_centrifuge.name=Supreme Centrifuge
+modid.machine.supreme_chemical_bath.name=Supreme Chemical Bath
+modid.machine.supreme_chemical_reactor.name=Supreme Chemical Reactor
+modid.machine.supreme_compressor.name=Supreme Compressor
+modid.machine.supreme_cutter.name=Supreme Cutting Machine
+modid.machine.supreme_distillery.name=Supreme Distillery
+modid.machine.supreme_electrolyzer.name=Supreme Electrolyzer
+modid.machine.supreme_electromagnetic_separator.name=Supreme Electromagnetic Separator
+modid.machine.supreme_extractor.name=Supreme Extractor
+modid.machine.supreme_fermenter.name=Supreme Fermenter
+modid.machine.supreme_fluid_extractor.name=Supreme Fluid Extractor
+modid.machine.supreme_fluid_solidifier.name=Supreme Fluid Solidifier
+modid.machine.supreme_forge_hammer.name=Supreme Forge Hammer
+modid.machine.supreme_forming_press.name=Supreme Forming Press
+modid.machine.supreme_lathe.name=Supreme Lathe
+modid.machine.supreme_mixer.name=Supreme Mixer
+modid.machine.supreme_ore_washer.name=Supreme Ore Washing Plant
+modid.machine.supreme_packer.name=Supreme Packager
+modid.machine.supreme_polarizer.name=Supreme Polarizer
+modid.machine.supreme_laser_engraver.name=Supreme Laser Engraver
+modid.machine.supreme_sifter.name=Supreme Sifting Machine
+modid.machine.supreme_thermal_centrifuge.name=Supreme Thermal Centrifuge
+modid.machine.supreme_wiremill.name=Supreme Wiremill
+modid.machine.supreme_item_collector.name=Supreme Item Collector
+modid.machine.supreme_fisher.name=Supreme Fisher
+modid.machine.supreme_pump.name=Supreme Pump
+modid.machine.supreme_air_collector.name=Supreme Air Collector
+modid.machine.supreme_block_breaker.name=Supreme Block Breaker
+
+
+
+
+
+
+
+
+tile.modid.precision_firmware_workbench.name=Precision Firmware Workbench
+tile.modid.etched_logic_casing.name=Etched Logic Casing
+tile.modid.firmware_memory_bank.name=Firmware Memory Bank
+tile.modid.noetic_induction_coil.name=Inconel 600 Induction Coil
+modid.material.noetic_alloy=Inconel 600
+modid.fluid.liquid_inconel=Liquid Inconel 600
+item.modid.precision_soldering_iron.name=Precision Soldering Iron
+item.modid.precision_wire_strippers.name=Precision Wire Strippers
+modid.machine.firmware_synthesis_array.name=Firmware Synthesis Array
+recipemap.firmware_synthesis.name=Firmware Synthesis
+modid.firmware.jei.title=Firmware Replication

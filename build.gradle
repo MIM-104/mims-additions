@@ -1,0 +1,593 @@
+/**
+ * It is advised that you do not edit anything in the build.gradle; unless you are sure of what you are doing
+ */
+import com.gtnewhorizons.retrofuturagradle.mcp.InjectTagsTask
+import org.jetbrains.changelog.Changelog
+import org.jetbrains.gradle.ext.Gradle
+
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+    id 'com.gtnewhorizons.retrofuturagradle' version '2.0.2'
+    id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
+    id 'com.modrinth.minotaur' version '2.+' apply false
+    id 'org.jetbrains.changelog' version '2.5.0'
+}
+
+apply from: 'gradle/scripts/helpers.gradle'
+
+// Early Assertions
+assertProperty 'mod_version'
+assertProperty 'root_package'
+assertProperty 'mod_id'
+assertProperty 'mod_name'
+
+assertSubProperties 'use_tags', 'tag_class_name'
+assertSubProperties 'use_access_transformer', 'access_transformer_locations'
+assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap'
+assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
+assertSubProperties 'use_asset_mover', 'asset_mover_version'
+
+setDefaultProperty 'use_modern_java_syntax', false, false
+setDefaultProperty 'generate_sources_jar', true, false
+setDefaultProperty 'generate_javadocs_jar', true, false
+setDefaultProperty 'mapping_channel', true, 'stable'
+setDefaultProperty 'mapping_version', true, '39'
+setDefaultProperty 'use_dependency_at_files', true, true
+setDefaultProperty 'minecraft_username', true, 'Developer'
+setDefaultProperty 'extra_jvm_args', false, ''
+setDefaultProperty 'extra_tweak_classes', false, ''
+setDefaultProperty 'change_minecraft_sources', false, false
+
+version = propertyString('mod_version')
+group = propertyString('root_package')
+
+base {
+    archivesName.set(propertyString('mod_id'))
+}
+
+tasks.decompressDecompiledSources.enabled !propertyBool('change_minecraft_sources')
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(propertyBool('use_modern_java_syntax') ? 16 : 8))
+        // Azul covers the most platforms for Java 8 toolchains, crucially including MacOS arm64
+        vendor.set(JvmVendorSpec.AZUL)
+    }
+    if (propertyBool('generate_sources_jar')) {
+        withSourcesJar()
+    }
+    if (propertyBool('generate_javadocs_jar')) {
+        withJavadocJar()
+    }
+}
+
+configurations {
+    embed
+    implementation.extendsFrom(embed)
+}
+
+minecraft {
+    mcVersion.set('1.12.2')
+
+    mcpMappingChannel.set(propertyString('mapping_channel'))
+    mcpMappingVersion.set(propertyString('mapping_version'))
+
+    useDependencyAccessTransformers.set(propertyBool('use_dependency_at_files'))
+
+    username.set(propertyString('minecraft_username'))
+
+    // Add any additional tweaker classes here
+    extraTweakClasses.addAll(propertyStringList('extra_tweak_classes'))
+
+    // Add various JVM arguments here for runtime
+    def args = ['-ea:' + group]
+    if (propertyBool('use_mixins')) {
+        args << '-Dmixin.hotSwap=true'
+        args << '-Dmixin.checks.interfaces=true'
+        args << '-Dmixin.debug.export=true'
+    }
+    extraRunJvmArguments.addAll(args)
+    extraRunJvmArguments.addAll(propertyStringList('extra_jvm_args'))
+
+    if (propertyBool('use_tags')) {
+        if (file('tags.properties').exists()) {
+            Properties props = new Properties().tap {  it.load(file('tags.properties').newInputStream()); it }
+            if (!props.isEmpty()) {
+                injectedTags.set(props.collectEntries { k, v -> [(k): interpolate(v)] })
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'CleanroomMC Maven'
+        url = 'https://maven.cleanroommc.com'
+    }
+    maven {
+        name = "CurseForge"
+        url = "https://cursemaven.com"
+    }
+    maven {
+        name = "BlameJared Maven"
+        url = "https://maven.blamejared.com"
+    }
+}
+
+
+dependencies {
+    // --- Mixin Annotation Processor Support ---
+    annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
+    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
+    annotationProcessor 'com.google.code.gson:gson:2.8.9'
+
+    // --- MixinBooter Setup via RFG Helper ---
+    String mixinBooter = modUtils.enableMixins("zone.rong:mixinbooter:${propertyString('mixin_booter_version')}", propertyString('mixin_refmap'))
+    api (mixinBooter) {
+        transitive = false
+    }
+    annotationProcessor (mixinBooter) {
+        transitive = false
+    }
+
+    runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
+    runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
+
+    compileOnly rfg.deobf('curse.maven:gregtech-ce-unofficial-557242:5519022')
+    compileOnly rfg.deobf('curse.maven:codechicken-lib-1-8-242818:2779848')
+    compileOnly rfg.deobf('curse.maven:ae2-uel-570458:5378163') // AE2 Unofficial Extended Life v0.56.5, Nomi-CEu compatible
+
+    // Small default runtime for quick mod and quest-editor iterations.
+    runtimeOnly rfg.deobf('curse.maven:gregtech-ce-unofficial-557242:5519022')
+    runtimeOnly rfg.deobf('curse.maven:codechicken-lib-1-8-242818:2779848')
+    runtimeOnly rfg.deobf('curse.maven:ae2-uel-570458:5378163') // AE2 Unofficial Extended Life v0.56.5, Nomi-CEu compatible
+    runtimeOnly rfg.deobf('curse.maven:cofh-core-69162:2920433') // Required by Simply Jetpacks 2 in Nomi-CEu 1.7.5
+    runtimeOnly rfg.deobf('curse.maven:simply-jetpacks-2-251792:3017440') // Titanium Coil Micro Miner recipe ingredient
+    runtimeOnly rfg.deobf('curse.maven:chisel-235279:2915375') // Required by the Projector IV diamond casing
+    runtimeOnly rfg.deobf('curse.maven:ctm-267602:2915363') // Chisel requires CTM 1.0.2.31+
+    runtimeOnly rfg.deobf('curse.maven:better-questing-unofficial-629629:5183601')
+    runtimeOnly rfg.deobf('curse.maven:draconic-evolution-223565:3431261')
+    runtimeOnly rfg.deobf('curse.maven:brandons-core-231382:3408276')
+    runtimeOnly rfg.deobf('curse.maven:redstone-flux-270789:2920436')
+    runtimeOnly rfg.deobf('curse.maven:nomi-labs-932060:6438352')
+    runtimeOnly rfg.deobf('curse.maven:configanytime-870276:5212709')
+    runtimeOnly rfg.deobf('curse.maven:groovyscript-687577:5635093')
+    runtimeOnly 'curse.maven:crafttweaker-239197:4723169'
+    compileOnly 'curse.maven:crafttweaker-239197:4723169' // GT RecipeMap exposes CraftTweaker annotations.
+    runtimeOnly rfg.deobf('curse.maven:packmode-278398:2567799')
+    runtimeOnly rfg.deobf('curse.maven:gregicality-multiblocks-564858:5619513') // Gregicality Multiblocks 1.2.11, Nomi-CEu 1.7.5
+    runtimeOnly rfg.deobf('curse.maven:the-lost-cities-269024:2861574') // The Lost Cities 1.12-2.0.22, Nomi-CEu 1.7.5
+    runtimeOnly rfg.deobf('curse.maven:the-one-probe-245211:2667280')
+    runtimeOnly rfg.deobf('curse.maven:had-enough-items-557549:6187146')
+    runtimeOnly rfg.deobf('curse.maven:cucumber-272335:2645867')
+    runtimeOnly rfg.deobf('curse.maven:extended-crafting-nomifactory-edition-398267:5778512')
+
+    // The One Probe
+    compileOnly rfg.deobf('curse.maven:the-one-probe-245211:2667280')
+
+    // Had Enough Items (HEI) - Nomi uses this instead of JEI
+    compileOnly rfg.deobf('curse.maven:had-enough-items-557549:6187146')
+
+    // Just Enough Resources (JER)
+    compileOnly rfg.deobf('curse.maven:just-enough-resources-jer-240630:2728585')
+
+    // Redstone Flux API
+    compileOnly rfg.deobf("curse.maven:redstone-flux-270789:2920436")
+
+    // Draconic Evolution
+    compileOnly rfg.deobf("curse.maven:draconic-evolution-223565:3431261")
+
+    // Brandon's Core
+    compileOnly rfg.deobf("curse.maven:brandons-core-231382:3408276")
+
+    // Cucumber Library (required by Extended Crafting)
+    compileOnly rfg.deobf("curse.maven:cucumber-272335:2645867")
+
+    // PackMode
+    compileOnly rfg.deobf("curse.maven:packmode-278398:2567799")
+
+    // ConfigAnytime (CurseForge version - replaces CleanroomMC Maven)
+    compileOnly rfg.deobf("curse.maven:configanytime-870276:5212709")
+
+
+    // Extended Crafting (Nomifactory Edition)
+    compileOnly rfg.deobf("curse.maven:extended-crafting-nomifactory-edition-398267:5778512")
+
+
+    // Gregicality Multiblocks 1.2.11 from Nomi-CEu 1.7.5
+    compileOnly rfg.deobf("curse.maven:gregicality-multiblocks-564858:5619513")
+
+    // Actually Additions
+    compileOnly rfg.deobf("curse.maven:actually-additions-228404:3117927")
+
+    // More Furnaces (Nomifactory Edition)
+    compileOnly rfg.deobf("curse.maven:morefurnaces-nomifactory-edition-391401:3613142")
+
+    // Extra Utilities 2
+    compileOnly rfg.deobf("curse.maven:extra-utilities-225561:2678374")
+
+    // Nomi Labs (correct version for HEI compatibility)
+    compileOnly rfg.deobf("curse.maven:nomi-labs-932060:6438352")
+
+    // GroovyScript (includes CraftTweaker as dependency)
+    compileOnly rfg.deobf("curse.maven:groovyscript-687577:5635093")
+
+    // Chisel
+    compileOnly rfg.deobf("curse.maven:chisel-235279:2915375")
+
+    // Avaritia 1.10
+    compileOnly rfg.deobf("curse.maven:avaritia-1-10-261348:3143349")
+    runtimeOnly rfg.deobf("curse.maven:avaritia-1-10-261348:3143349")
+
+    // LibVulpes
+    compileOnly rfg.deobf("curse.maven:libvulpes-236541:2949886")
+
+    // LibrarianLib Continuous
+    compileOnly rfg.deobf("curse.maven:librarianlib-continuous-1058274:5531643")
+
+    // CTM (Connected Textures Mod)
+    compileOnly rfg.deobf("curse.maven:ctm-267602:2915363")
+
+    // Forgelin Continuous
+    compileOnly rfg.deobf("curse.maven:forgelin-continuous-456403:5624708")
+
+    compileOnly rfg.deobf("curse.maven:ulv-covers-635555:4912949")
+
+    // Simply Jetpacks 2
+    compileOnly rfg.deobf("curse.maven:simply-jetpacks-2-251792:3017440")
+
+}
+
+apply from: 'gradle/scripts/dependencies.gradle'
+
+// Local quest edits take priority; clean checkouts use the committed pack files.
+def useTrackedPackFiles = providers.gradleProperty('useTrackedPackFiles').map { it.toBoolean() }.getOrElse(false)
+def packSource = { String path ->
+    def localFile = file("run/${path}")
+    !useTrackedPackFiles && localFile.isFile() ? localFile : file("pack/${path}")
+}
+def coinScripts = ['coins.zs', 'coin_conversions.zs', 'coins_actuallyadditions.zs', 'coins_misc.zs']
+def questDatabaseToPackage = packSource('config/betterquesting/DefaultQuests.json')
+def packagedQuestDatabase = layout.buildDirectory.file('generated/questbook/DefaultQuests.json')
+def preparePackagedQuestDatabase = tasks.register('preparePackagedQuestDatabase') {
+    inputs.file(questDatabaseToPackage)
+    outputs.file(packagedQuestDatabase)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        if (!questDatabaseToPackage.isFile()) {
+            throw new GradleException("Missing saved Better Questing database: ${questDatabaseToPackage}")
+        }
+
+        logger.lifecycle("Packaging the latest saved in-game questbook from ${questDatabaseToPackage}")
+        def questDatabase = new groovy.json.JsonSlurper().parse(questDatabaseToPackage)
+        int restoredPlaceholderItems = 0
+        int restoredPlaceholderFluids = 0
+        def restorePlaceholderReferences
+        restorePlaceholderReferences = { value ->
+            if (value instanceof Map) {
+                if (value['id:8'] == 'betterquesting:placeholder') {
+                    def originalItem = value['tag:10']
+                    if (!(originalItem instanceof Map)
+                            || !(originalItem['orig_id:8'] instanceof String)
+                            || originalItem['orig_id:8'].trim().isEmpty()
+                            || !(originalItem['orig_meta:3'] instanceof Number)) {
+                        throw new GradleException(
+                                "Cannot restore a Better Questing placeholder item: ${groovy.json.JsonOutput.toJson(value)}")
+                    }
+
+                    value['id:8'] = originalItem['orig_id:8']
+                    value['Damage:2'] = originalItem['orig_meta:3']
+                    value.remove('tag:10')
+                    restoredPlaceholderItems++
+                }
+
+                if (value['FluidName:8'] == 'betterquesting.placeholder') {
+                    def originalFluid = value['Tag:10']
+                    if (!(originalFluid instanceof Map)
+                            || !(originalFluid['orig_id:8'] instanceof String)
+                            || originalFluid['orig_id:8'].trim().isEmpty()) {
+                        throw new GradleException(
+                                "Cannot restore a Better Questing placeholder fluid: ${groovy.json.JsonOutput.toJson(value)}")
+                    }
+
+                    value['FluidName:8'] = originalFluid['orig_id:8']
+                    value.remove('Tag:10')
+                    restoredPlaceholderFluids++
+                }
+
+                value.values().each { child -> restorePlaceholderReferences(child) }
+            } else if (value instanceof List) {
+                value.each { child -> restorePlaceholderReferences(child) }
+            }
+        }
+        restorePlaceholderReferences(questDatabase)
+
+        def outputFile = packagedQuestDatabase.get().asFile
+        outputFile.parentFile.mkdirs()
+        outputFile.setText(
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(questDatabase)) + '\n',
+                'UTF-8')
+
+        logger.lifecycle("Prepared Better Questing database for the mod JAR; restored "
+                + "${restoredPlaceholderItems} missing-mod item and ${restoredPlaceholderFluids} fluid references "
+                + "across ${questDatabase['questDatabase:9'].size()} quests.")
+    }
+}
+
+tasks.register('syncPackSources') {
+    group = 'build'
+    description = 'Saves the current questbook and bundled coin scripts as portable build inputs.'
+    dependsOn preparePackagedQuestDatabase
+    doLast {
+        copy {
+            from packagedQuestDatabase
+            into 'pack/config/betterquesting'
+        }
+        copy {
+            from coinScripts.collect { packSource("scripts/${it}") }
+            into 'pack/scripts'
+        }
+    }
+}
+
+// Adds Access Transformer files to tasks
+if (propertyBool('use_access_transformer')) {
+    for (def location : propertyStringList('access_transformer_locations')) {
+        def fileLocation = file("${projectDir}/src/main/resources/${location}")
+        if (fileLocation.exists()) {
+            tasks.deobfuscateMergedJarToSrg.accessTransformerFiles.from(fileLocation)
+            tasks.srgifyBinpatchedJar.accessTransformerFiles.from(fileLocation)
+        } else {
+            throw new GradleException("Access Transformer file [$fileLocation] does not exist!")
+        }
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                "FMLCorePlugin": "com.example.modid.core.ModidCoremod",
+                "FMLCorePluginContainsFMLMod": "true"
+        )
+    }
+}
+
+
+processResources {
+    dependsOn preparePackagedQuestDatabase
+    from(packagedQuestDatabase) {
+        into 'betterquesting'
+    }
+    from(coinScripts.collect { packSource("scripts/${it}") }) {
+        into 'scripts'
+    }
+
+    inputs.property 'mod_id', propertyString('mod_id')
+    inputs.property 'mod_name', propertyString('mod_name')
+    inputs.property 'mod_version', propertyString('mod_version')
+    inputs.property 'mod_description', propertyString('mod_description')
+    inputs.property 'mod_authors', "${propertyStringList('mod_authors', ',').join(', ')}"
+    inputs.property 'mod_credits', propertyString('mod_credits')
+    inputs.property 'mod_url', propertyString('mod_url')
+    inputs.property 'mod_update_json', propertyString('mod_update_json')
+    inputs.property 'mod_logo_path', propertyString('mod_logo_path')
+    inputs.property 'mixin_refmap', propertyString('mixin_refmap')
+    inputs.property 'mixin_package', propertyString('mixin_package')
+    inputs.property 'mixin_configs', propertyStringList('mixin_configs').join(' ')
+
+    def filterList = ['mcmod.info', 'pack.mcmeta']
+    filterList.addAll(propertyStringList('mixin_configs').collect(config -> "mixins.${config}.json" as String))
+
+    filesMatching(filterList) { fcd ->
+        fcd.expand(
+                'mod_id': propertyString('mod_id'),
+                'mod_name': propertyString('mod_name'),
+                'mod_version': propertyString('mod_version'),
+                'mod_description': propertyString('mod_description'),
+                'mod_authors': "${propertyStringList('mod_authors', ',').join(', ')}",
+                'mod_credits': propertyString('mod_credits'),
+                'mod_url': propertyString('mod_url'),
+                'mod_update_json': propertyString('mod_update_json'),
+                'mod_logo_path': propertyString('mod_logo_path'),
+                'mixin_refmap': propertyString('mixin_refmap'),
+                'mixin_package': propertyString('mixin_package')
+        )
+    }
+
+    if (propertyBool('use_access_transformer')) {
+        rename '(.+_at.cfg)', 'META-INF/$1'
+    }
+
+}
+
+
+jar {
+    // Handle duplicate files - exclude the first occurrence
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        def attribute_map = [:]
+        if (propertyBool('is_coremod')) {
+            attribute_map['FMLCorePlugin'] = propertyString('coremod_plugin_class_name')
+            if (propertyBool('coremod_includes_mod')) {
+                attribute_map['FMLCorePluginContainsFMLMod'] = true
+                def currentTasks = gradle.startParameter.taskNames
+                if (currentTasks[0] == 'build' || currentTasks[0] == 'prepareObfModsFolder' || currentTasks[0] == 'runObfClient') {
+                    attribute_map['ForceLoadAsMod'] = true
+                }
+            }
+        }
+        if (propertyBool('use_access_transformer')) {
+            attribute_map['FMLAT'] = propertyString('access_transformer_locations')
+        }
+        // ModidCoremod and LateMixin register the early and late configurations with MixinBooter.
+        // Do not also queue the obsolete, unsplit mixins.modid.json from the JAR manifest.
+        attributes(attribute_map)
+    }
+
+    // Add all embedded dependencies into the jar
+    from(provider{ configurations.embed.collect {it.isDirectory() ? it : zipTree(it)} }) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+}
+
+
+
+
+
+idea {
+    module {
+        inheritOutputDirs = true
+    }
+    project {
+        settings {
+            runConfigurations {
+                "1. Run Client"(Gradle) {
+                    taskNames = ["runClient"]
+                }
+                "2. Run Server"(Gradle) {
+                    taskNames = ["runServer"]
+                }
+                "3. Run Obfuscated Client"(Gradle) {
+                    taskNames = ["runObfClient"]
+                }
+                "4. Run Obfuscated Server"(Gradle) {
+                    taskNames = ["runObfServer"]
+                }
+            }
+            compiler.javac {
+                afterEvaluate {
+                    javacAdditionalOptions = "-encoding utf8"
+                    moduleJavacAdditionalOptions = [
+                            (project.name + ".main"): tasks.compileJava.options.compilerArgs.collect { '"' + it + '"' }.join(' ')
+                    ]
+                }
+            }
+        }
+    }
+}
+
+compileTestJava {
+    sourceCompatibility = targetCompatibility = 8
+}
+
+test {
+    useJUnitPlatform()
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    })
+    if (propertyBool('show_testing_output')) {
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+}
+
+String parserChangelog() {
+    if (!file('CHANGELOG.md').exists()) {
+        throw new GradleException('publish_with_changelog is true, but CHANGELOG.md does not exist in the workspace!')
+    }
+    String parsedChangelog = changelog.renderItem(
+            changelog.get(propertyString('mod_version')).withHeader(false).withEmptySections(false),
+            Changelog.OutputType.MARKDOWN)
+    if (parsedChangelog.isEmpty()) {
+        throw new GradleException('publish_with_changelog is true, but the changelog for the latest version is empty!')
+    }
+    return parsedChangelog
+}
+
+tasks.register('generateMixinJson') {
+    group 'cleanroom helpers'
+    def missingConfig = propertyStringList('mixin_configs').findAll(config -> !file("src/main/resources/mixins.${config}.json").exists())
+    onlyIf {
+        if (propertyBool('use_mixins') && propertyBool('generate_mixins_json')) {
+            return !missingConfig.empty
+        }
+        return false
+    }
+    doLast {
+        for (String mixinConfig : missingConfig) {
+            def file = file("src/main/resources/mixins.${mixinConfig}.json")
+            file << """{\n\t"package": "",\n\t"required": true,\n\t"refmap": "${propertyString('mixin_refmap')}",\n\t"target": "@env(DEFAULT)",\n\t"minVersion": "0.8.5",\n\t"compatibilityLevel": "JAVA_8",\n\t"mixins": [],\n\t"server": [],\n\t"client": []\n}"""
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    if (propertyBool('use_modern_java_syntax')) {
+        if (it.name in ['compileMcLauncherJava', 'compilePatchedMcJava']) {
+            return
+        }
+        sourceCompatibility = 17
+        options.release.set(8)
+        javaCompiler.set(javaToolchains.compilerFor {
+            languageVersion.set(JavaLanguageVersion.of(16))
+            vendor.set(JvmVendorSpec.AZUL)
+        })
+    }
+}
+
+tasks.register('cleanroomAfterSync') {
+    group 'cleanroom helpers'
+    dependsOn 'injectTags', 'generateMixinJson'
+}
+
+if (propertyBool('use_modern_java_syntax')) {
+    tasks.withType(Javadoc).configureEach {
+        sourceCompatibility = 17
+    }
+}
+
+tasks.named('injectTags', InjectTagsTask).configure {
+    onlyIf {
+        return propertyBool('use_tags') && !it.getTags().get().isEmpty()
+    }
+    it.outputClassName.set(propertyString('tag_class_name'))
+}
+
+tasks.named('prepareObfModsFolder').configure {
+    finalizedBy 'prioritizeCoremods'
+}
+
+tasks.register('prioritizeCoremods') {
+    dependsOn 'prepareObfModsFolder'
+    doLast {
+        fileTree('run/obfuscated').forEach {
+            if (it.isFile() && it.name =~ '(mixinbooter|configanytime)(-)([0-9])+\\.+([0-9])+(.jar)') {
+                it.renameTo(new File(it.parentFile, "!${it.name}"))
+            }
+        }
+    }
+}
+
+idea.project.settings {
+    taskTriggers {
+        afterSync 'cleanroomAfterSync'
+    }
+}
+
+apply from: 'gradle/scripts/publishing.gradle'
+apply from: 'gradle/scripts/extra.gradle'
+
+// File-level quest update checks do not launch Minecraft or touch any player save.
+sourceSets {
+    questInstallerCheck {
+        java.srcDir 'src/verification/java'
+        compileClasspath = sourceSets.main.output + configurations.compileClasspath
+        runtimeClasspath = output + sourceSets.main.output + configurations.runtimeClasspath
+    }
+}
+tasks.register('verifyQuestInstaller', JavaExec) {
+    dependsOn questInstallerCheckClasses
+    classpath = sourceSets.questInstallerCheck.runtimeClasspath
+    mainClass = 'com.example.modid.common.BundledQuestInstallerCheck'
+    args layout.buildDirectory.get().asFile.absolutePath
+}
+tasks.named('check') { dependsOn 'verifyQuestInstaller' }
